@@ -26,3 +26,7 @@ code {
     color: cornflowerblue !important;
     text-decoration: underline !important;
 }
+
+.post {
+    margin: 20px 0;
+}
