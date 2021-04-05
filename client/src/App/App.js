@@ -1,5 +1,7 @@
 import React from 'react';
 import {BrowserRouter as Router, Route} from 'react-router-dom';
+import { RelayEnvironmentProvider } from 'react-relay/hooks';
+import RelayEnvironment from '../RelayEnvironment';
 import Header from './Common/Header'
 import Footer from './Common/Footer'
 import PostsList from './Pages/PostsList/PostsList';
@@ -20,4 +22,14 @@ function App() {
     );
 }
 
-export default App;
+function AppRoot() {
+    return (
+        <RelayEnvironmentProvider environment={RelayEnvironment}>
+            <React.StrictMode>
+                <App />
+            </React.StrictMode>
+        </RelayEnvironmentProvider>
+    );
+}
+
+export default AppRoot;

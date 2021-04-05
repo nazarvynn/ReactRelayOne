@@ -1,32 +1,54 @@
-import React from 'react'
+import React, { PureComponent, Suspense } from 'react'
 import PostPreview from './PostPreview'
+import graphql from "babel-plugin-relay/macro";
+import { loadQuery, usePreloadedQuery } from "react-relay/hooks";
+import RelayEnvironment from "../../../RelayEnvironment";
 
-export default class PostsList extends React.PureComponent {
-    render() {
-        const posts = [
-            {
-                id: 1,
-                description: 'Jedi 1',
-                imageUrl: 'https://i.pinimg.com/236x/02/06/a2/0206a2e0ae3053d7c9fe1c4650138216.jpg'
-            },
-            {
-                id: 2,
-                description: 'Jedi 2',
-                imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRT3P0SMtq-heuvlT0r4CxWclGW2CQ9okkSbMRMPUFLnCaar7y9SJYPPN6HaR5As5OOTMw'
-            },
-            {
-                id: 3,
-                description: 'Jedi 3',
-                imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSV3xllSu90xZJt0eShm3lh0UpDxxzD9ljOrzPhu85tYnSU5P-8NQd0BpU50o1BKdDbSyc'
+const PhotoQuery = graphql`
+    query PostsListPhotoQuery($options: PageQueryOptions) {
+        photos(options: $options) {
+            data {
+                id
+                title
+                url
+                thumbnailUrl
             }
-        ]
+            meta {
+                totalCount
+            }
+        }
+    }
+`;
+const queryReference = loadQuery(RelayEnvironment, PhotoQuery, {
+    options: {
+        paginate: {
+            page: 1,
+            limit: 10
+        },
+        sort: {
+            field: "id",
+            order: "DESC"
+        }
+    }
+});
 
+export default class PostsList extends PureComponent {
+    render() {
         return (
-            <div>
-                {posts.map((post, index) => (
-                    <PostPreview key={index} data={post} />
-                ))}
-            </div>
+            <Suspense fallback={'Loading...'}>
+                {queryReference && <Container queryReference={queryReference} />}
+            </Suspense>
         );
     }
 }
+
+const Container = ({ queryReference }) => {
+    const { photos } = usePreloadedQuery(PhotoQuery, queryReference);
+    return (
+        <div>
+            {photos?.data?.map((photo, index) => (
+                <PostPreview key={index} data={photo} />
+            ))}
+        </div>
+    );
+};

@@ -1,28 +1,46 @@
 import React from 'react'
-import PropTypes from 'prop-types';
+import graphql from "babel-plugin-relay/macro";
+import {useMutation} from "react-relay/hooks";
 
-export default class PostPreview extends React.PureComponent {
-    static propTypes = {
-        data: PropTypes.shape({
-            id: PropTypes.number,
-            description: PropTypes.string,
-            imageUrl: PropTypes.string
-        })
-    };
+export default function PostPreview(props) {
+    // Prop types
+    // Store
+    // static propTypes = {
+    //     data: PropTypes.shape({
+    //         id: PropTypes.string,
+    //         title: PropTypes.string,
+    //         url: PropTypes.string,
+    //         thumbnailUrl: PropTypes.string
+    //     })
+    // };
 
-    render() {
-        const { id, description, imageUrl } = this.props.data;
-        return (
-            <div className="post">
-                <h1>{ description }</h1>
-                <img src={ imageUrl } width="100" alt={ description } />
-                <br />
-                <button onClick={event => this.onDelete(event, id)}>Delete</button>
-            </div>
-        );
+    const [commit, isInFlight] = useMutation(graphql`
+        mutation PostPreviewDeletePhotoMutation($id: ID!) {
+            deletePhoto(id: $id)
+        }
+    `);
+
+    function onDelete(event, id) {
+        commit({
+            variables: { id },
+            onCompleted(data) {
+                console.log(data);
+            },
+        });
     }
 
-    onDelete = (event, id) => {
-        console.log('delete', id);
-    }
+    const { id, title, thumbnailUrl } = props.data;
+
+    // if (isInFlight) {
+    //         return 'Loading...';
+    // }
+
+    return (
+        <div className="post">
+            <h1>{title}</h1>
+            <img src={thumbnailUrl} width="100" alt={title}/>
+            <br/>
+            <button onClick={event => onDelete(event, id)}>Delete</button>
+        </div>
+    );
 }

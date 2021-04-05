@@ -1,43 +1,57 @@
 import React from 'react'
+import graphql from "babel-plugin-relay/macro";
+import { useMutation } from "react-relay/hooks";
 
-export default class CreatePost extends React.PureComponent {
-    state = {
-        description: '',
-        imageUrl: ''
-    };
+export default function CreatePost() {
+    const [commit, isInFlight] = useMutation(graphql`
+        mutation CreatePostCreatePhotoMutation($input: CreatePhotoInput!) {
+            createPhoto(input: $input) {
+                id
+                title
+                thumbnailUrl
+            }
+        }
+    `);
 
-    render() {
-        return (
-            <div>
-                <form onSubmit={this.onSubmit}>
-                    <label>
-                        Description
-                        <br />
-                        <input type="text" name="description" onChange={event => this.handleChange(event)} />
-                    </label>
-                    <br />
-                    <label>
-                        Image URL
-                        <br />
-                        <input type="text" name="imageUrl" onChange={event => this.handleChange(event)} />
-                    </label>
-                    <br /><br />
-                    <input type="submit" value="Submit" />
-                </form>
-            </div>
-        );
-    }
-
-    handleChange = (event) => {
-        const target = event.target;
-        this.setState({[target.name]: target.value});
-    };
-
-    onSubmit = (event) => {
+    function onSubmit(event) {
         event.preventDefault();
         event.stopPropagation();
 
-        const {description, imageUrl} = this.state;
-        console.log(description, imageUrl);
+        const formData = new FormData(event.target);
+        const title = formData.get('title')
+        const url = formData.get('imageUrl')
+
+        commit({
+            variables: {
+                input: { title, url, thumbnailUrl: url },
+            },
+            onCompleted(data) {
+                console.log(data);
+            },
+        });
     }
+
+    if (isInFlight) {
+        return 'Loading...';
+    }
+
+    return (
+        <div>
+            <form onSubmit={onSubmit}>
+                <label>
+                    Description
+                    <br />
+                    <input type="text" name="title" />
+                </label>
+                <br />
+                <label>
+                    Image URL
+                    <br />
+                    <input type="text" name="imageUrl" />
+                </label>
+                <br /><br />
+                <input type="submit" value="Submit" />
+            </form>
+        </div>
+    );
 }
